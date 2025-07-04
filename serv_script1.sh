@@ -133,6 +133,10 @@ echo "$TIMEZONE" | sudo tee /etc/timezone
 ln -sf "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
 
 
+# --- Sync NTP clock ---
+sleep 1; echo "•"
+echo ">>> Set NTP Service..."
+
 # Check that systemd-timesynd is installed
 # if systemctl status systemd-timesyncd 2>&1 | grep "could not be found" &>/dev/null; then
 if ! systemctl status systemd-timesyncd &>/dev/null; then
@@ -145,13 +149,13 @@ if ! systemctl status systemd-timesyncd &>/dev/null; then
     systemctl enable --now systemd-timesyncd # enable + start
     # systemctl restart systemd-timesyncd  # Forces D-Bus refresh
 
-    systemctl status systemd-timesyncd
+    # systemctl status systemd-timesyncd
     # echo ">>> Sleep 4"
     # sleep 4
     # systemctl is-enabled systemd-timesyncd
 fi
 
-echo ">>> Syncing NTP clock..."
+echo ">>> Synchronize System Clock..."
 timedatectl set-ntp true
 
 
@@ -202,31 +206,44 @@ fi
 
 # --- Validation ---
 sleep 1; echo "•"
+echo ">>>"
+echo ">>>"
+echo ">>>"
+echo ">>>"
+echo ">>>"
+echo ">>>"
+echo ">>>"
+echo ">>>"
+echo ">>>"
 echo ">>> Verification. Check results:"
 
-#echo -e "\n--- Locale ---"
+echo -e "\n•\n\n▪ localectl status"
 localectl status
-#echo -e "\n--- Time ---"
+
+echo -e "\n•\n\n▪ timedatectl status"
 timedatectl status
-#echo -e "\n--- cat /etc/timezone ---"
+
+echo -e "\n•\n\n▪ cat /etc/timezone"
 cat /etc/timezone
-#echo -e "\n--- Timezone file ---"
+
+echo -e "\n•\n\n▪ ls -l /etc/localtime"
 ls -l /etc/localtime
 
-#echo -e "\n--- /etc/hostname file ---"
+echo -e "\n•\n\n▪ cat /etc/hostname file"
 cat /etc/hostname
-#echo -e "\n--- /etc/hosts file ---"
+
+echo -e "\n•\n\n▪ cat /etc/hosts file"
 cat /etc/hosts
 
-#echo -e "\n--- ssh key ---"
+echo -e "\n•\n\n▪ ls -al $SSH_DIR/authorized_keys"
 ls -al $SSH_DIR/authorized_keys
 
-#echo -e "\n--- serv_dot ---"
+echo -e "\n•\n\n▪ ls -al /home/$NEW_USER/tmp/serv_dot"
 ls -al /home/$NEW_USER/tmp/serv_dot
 
 
 # --- Close ---
-echo -e "\n\n🛠️  Setup Complete!"
+echo -e "\n•\n\n🛠️  Setup Complete!"
 echo ""
 echo "What to do next:"
 echo "$ su $NEW_USER"

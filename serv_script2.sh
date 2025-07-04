@@ -158,22 +158,50 @@ sudo sysctl -p
 
 # --- Validation ---
 sleep 1; echo "•"
+echo ">>>"
+echo ">>>"
+echo ">>>"
+echo ">>>"
+echo ">>>"
+echo ">>>"
+echo ">>>"
+echo ">>>"
+echo ">>>"
 echo ">>> Verification. Check results:"
 
+echo -e "\n•\n\n▪ ufw status"
 sudo ufw status
+
+echo -e "\n•\n\n▪ systemctl status fail2ban"
 sudo systemctl status fail2ban
+
+echo -e "\n•\n\n▪ fail2ban-client status"
 sudo fail2ban-client status
+
+echo -e "\n•\n\n▪ fail2ban-client status sshd"
 sudo fail2ban-client status sshd
+
+echo -e "\n•\n\n▪ fail2ban-client status recidive"
 sudo fail2ban-client status recidive
+
+echo -e "\n•\n\n▪ systemctl status ssh"
 sudo systemctl status ssh
+
+echo -e "\n•\n\n▪ free -h"
 free -h
-swapon
+
+echo -e "\n•\n\n▪ swapon --show"
+swapon --show
+
+echo -e "\n•\n\n▪ cat /proc/sys/vm/swappiness"
 cat /proc/sys/vm/swappiness
+
+echo -e "\n•\n\n▪ cat /proc/sys/vm/vfs_cache_pressure"
 cat /proc/sys/vm/vfs_cache_pressure
 
 
 # --- Close ---
-echo -e "\n\n🛠️  Config Complete: ufw, ssh, fail2ban, swap + cache_pressure."
+echo -e "\n•\n\n🛠️  Config Complete: ufw, ssh, fail2ban, swap + cache_pressure."
 
 
 
