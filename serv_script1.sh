@@ -32,19 +32,21 @@ HOSTNAME=""
 
 # Heredoc
 # /etc/hosts setting:
-HOSTS=$(cat << 'EOF'
+# EOF without quotes you can use variables, etc;
+# pass through sed to remove leading spaces
+HOSTS=$(cat << EOF | sed 's/^[[:space:]]*//'
 
-127.0.0.1         localhost localhost.localdomain
-127.0.1.1         rail rail.paperdrift.com
-172.236.252.18    rail rail.paperdrift.com
+    127.0.0.1         localhost localhost.localdomain
+    127.0.1.1         rail rail.paperdrift.com
+    172.236.252.18    rail rail.paperdrift.com
 
-# For IPv6
-2a01:7e03::2000:39ff:fece:cee2  rail rail.paperdrift.com
+    # For IPv6
+    2a01:7e03::2000:39ff:fece:cee2  rail rail.paperdrift.com
 
-# The following lines are desirable for IPv6 capable hosts
-::1     localhost ip6-localhost ip6-loopback
-ff02::1 ip6-allnodes
-ff02::2 ip6-allrouters
+    # The following lines are desirable for IPv6 capable hosts
+    ::1     localhost ip6-localhost ip6-loopback
+    ff02::1 ip6-allnodes
+    ff02::2 ip6-allrouters
 
 EOF
 )
@@ -130,8 +132,28 @@ timedatectl set-timezone "$TIMEZONE"
 echo "$TIMEZONE" | sudo tee /etc/timezone
 ln -sf "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
 
+
+# Check that systemd-timesynd is installed
+# if systemctl status systemd-timesyncd 2>&1 | grep "could not be found" &>/dev/null; then
+if ! systemctl status systemd-timesyncd &>/dev/null; then
+    # systemctl status systemd-timesyncd
+    # dpkg -l | grep systemd-timesyncd
+    # timedatectl timesync-status
+    echo ">>> Installing systemd-timesyncd"
+    apt install -y systemd-timesyncd
+    echo ">>> enabling systemd-timesync"
+    systemctl enable --now systemd-timesyncd # enable + start
+    # systemctl restart systemd-timesyncd  # Forces D-Bus refresh
+
+    systemctl status systemd-timesyncd
+    # echo ">>> Sleep 4"
+    # sleep 4
+    # systemctl is-enabled systemd-timesyncd
+fi
+
 echo ">>> Syncing NTP clock..."
 timedatectl set-ntp true
+
 
 
 # --- kb layout ---
@@ -146,7 +168,8 @@ sleep 1; echo "•"
 echo ">>> Setting /etc/hostname file to $HOSTNAME..."
 hostnamectl set-hostname "$HOSTNAME"
 echo ">>> Setting /etc/hosts file..."
-echo "$HOSTS" | sudo tee /etc/hosts > /dev/null
+echo "$HOSTS" | sudo tee /etc/hosts >/dev/null
+  # tee outputs to stout; suppress that;
 
 # --- setup ssh public key ---
 sleep 1; echo "•"
@@ -207,14 +230,10 @@ echo -e "\n\n🛠️  Setup Complete!"
 echo ""
 echo "What to do next:"
 echo "$ su $NEW_USER"
+echo
 echo "Install dot files and applications:"
 echo "$ cd ~/tmp/serv_dot"
 echo "$ . serv_dot.sh"
-
-
-
-
-
 
 
 ###############################################

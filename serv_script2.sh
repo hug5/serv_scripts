@@ -28,7 +28,7 @@ SWAPCOUNT=5
 
 # swapfile swappiness
 SWAPPINESS=20
-# file cache_pressure
+# file cache_pressure; file manager inode cache
 CACHE_PRESSURE=50
 
 
@@ -107,6 +107,11 @@ if [[ "$CREATE_SWAP" == true ]]; then
     # swappiness
     echo ">>> Creating swapfile"
 
+    # In case there is a preexisting ACTIVE swapfile; then swapoff
+    if [[ -f /swapfile ]] && sudo swapon | grep /swapfil &>/dev/null; then
+        sudo swapoff /swapfile
+    fi
+
     # Create file to use as swap:
     sudo touch /swapfile
     sudo chmod 600 /swapfile
@@ -124,7 +129,6 @@ if [[ "$CREATE_SWAP" == true ]]; then
       echo "/swapfile  none  swap  sw  0  0" | sudo tee -a /etc/fstab
     fi
 
-    # swapoff /swapfile
 
 else
     echo ">>> Skipping swapfile"
