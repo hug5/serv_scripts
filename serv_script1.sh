@@ -14,20 +14,27 @@ set -euo pipefail  # Exit on error, undefined variables, and pipeline failures
   # https://gist.github.com/mohanpedala/1e2ff5661761d3abd0385e8223e16425?permalink_comment_id=3935570
 
 #------------------------------------------------
-### Initial Server Setup
+### Initial Server Setup #1
 #------------------------------------------------
 # Create users, passwords, locale, timezone,
- # hostname, hosts, ssh key, install programs,
- # clone serv_dot
+# hostname, hosts, ssh key, install programs,
+# clone serv_dot
 
-
-
-#------------------------------------------------
 
 # --- User Configuration ---
 
 NEW_USER=""
 HOSTNAME=""
+
+## Choose public ssh key to use:
+## Linode
+#SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIND3WdyM/uNlOPA3hnGI1NojU0GAhnya5LmEIXsTpkSZ linode"
+
+## Vultr
+#SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJvRchOMU0BxUkl3homRaW91rFbM6TAFryqCkqzOk1gD vultr"
+
+## DigitalOcean
+#SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICCkSINhno1wkFfqjounBUilwg4rhDf2X8DKDix1IRAr digitalocean"
 
 
 # Heredoc
@@ -51,16 +58,6 @@ HOSTS=$(cat << EOF | sed 's/^[[:space:]]*//'
 EOF
 )
 
-## Choose public ssh key to use:
-
-## Linode
-SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIND3WdyM/uNlOPA3hnGI1NojU0GAhnya5LmEIXsTpkSZ linode"
-## Vultr
-#SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJvRchOMU0BxUkl3homRaW91rFbM6TAFryqCkqzOk1gD vultr-server"
-## DigitalOcean
-#SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICCkSINhno1wkFfqjounBUilwg4rhDf2X8DKDix1IRAr digitalocean"
-
-
 
 # - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - -
@@ -73,8 +70,8 @@ SSH_DIR="/home/$NEW_USER/.ssh"
 
 #------------------------------------------------
 
-if [[ -z "$NEW_USER" ]] || [[ -z "$HOSTNAME" ]]; then
-    echo "Please provide a new user/hostname."
+if [[ -z "$NEW_USER" ]] || [[ -z "$HOSTNAME" ]] || [[ -z "$SSH_PUB" ]]; then
+    echo "Please provide a new user, hostname and SSH public key."
     exit
 fi
 
@@ -91,6 +88,9 @@ case "$CHOICE" in
       echo "Alright... here we go!"
       ;;
 esac
+
+# --- apt update & upgrade ---
+apt update -y && apt upgrade -y
 
 
 # --- Root Setup ---
@@ -122,7 +122,9 @@ localectl set-locale LANG=en_US.UTF-8 LANGUAGE=en_US:en
 
 
 echo ">>> Doing locale-gen $LOCALE..."
-locale-gen en_US.UTF-8
+/usr/sbin/locale-gen en_US.UTF-8
+  # Using full path because when relogin and then try running script
+   # again, then can't find locale-gen; but works okay if sudo it;
 
 
 # --- Timezone ---
@@ -174,6 +176,27 @@ hostnamectl set-hostname "$HOSTNAME"
 echo ">>> Setting /etc/hosts file..."
 echo "$HOSTS" | sudo tee /etc/hosts >/dev/null
   # tee outputs to stout; suppress that;
+
+
+# --- Vultr: comment out - update_etc_hosts in /etc/cloud/cloud.cfg ---
+# /etc/cloud/cloud.cfg
+# Comment out:
+# - update_etc_hosts
+# On vultr, need to comment this out in order to preserve changes to /etc/hosts;
+# Linode doesn't need it, but will comment out consistently:
+echo ">>> Comment out - update_etc_hosts in /etc/cloud/cloud.cfg"
+sed -i 's/ - update_etc_hosts/# - update_etc_hosts/' /etc/cloud/cloud.cfg
+  # A danger is that in vult, there are 2 empty spaces;
+  # In linode, just 1 empty space; Linode doesn't matter to us, but still...
+  # So will just look for the string and not worry about spaces
+
+# This is the message that appears in vultr /etc/hosts:
+  # Your system has configured 'manage_etc_hosts' as True.
+  # As a result, if you wish for changes to this file to persist
+  # then you will need to either
+  # a.) make changes to the master file in /etc/cloud/templates/hosts.debian.tmpl
+  # b.) change or remove the value of 'manage_etc_hosts' in
+  #     /etc/cloud/cloud.cfg or cloud-config from user-data
 
 # --- setup ssh public key ---
 sleep 1; echo "•"
@@ -235,6 +258,10 @@ cat /etc/hostname
 echo -e "\n•\n\n▪ cat /etc/hosts file"
 cat /etc/hosts
 
+echo -e "\n•\n\n▪ grep "update_etc_hosts" /etc/cloud/cloud.cfg"
+grep "update_etc_hosts" /etc/cloud/cloud.cfg;
+  # Should be commented out on vultr servers
+
 echo -e "\n•\n\n▪ ls -al $SSH_DIR/authorized_keys"
 ls -al $SSH_DIR/authorized_keys
 
@@ -243,7 +270,7 @@ ls -al /home/$NEW_USER/tmp/serv_dot
 
 
 # --- Close ---
-echo -e "\n•\n\n🛠️  Setup Complete!"
+echo -e "\n•\n\n🛠️  Setup #1 Complete!"
 echo ""
 echo "What to do next:"
 echo "$ su $NEW_USER"

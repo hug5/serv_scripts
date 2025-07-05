@@ -14,20 +14,25 @@ set -euo pipefail  # Exit on error, undefined variables, and pipeline failures
   # https://gist.github.com/mohanpedala/1e2ff5661761d3abd0385e8223e16425?permalink_comment_id=3935570
 
 #------------------------------------------------
-### Configure ufw, sshd_config, fail2ban
+### Initial Server Setup #2
 #------------------------------------------------
+# Configure ufw, sshd_config, fail2ban,
+# swap, swappiness, cache_pressure
+
 
 # --- User Configuration ---
 
 # Create /swapfile?
 CREATE_SWAP=true
 
-# 128M * N
-# 4=512M; 5=640M; 6=768M
+# Swap size
 SWAPCOUNT=5
+  # 128M * N
+  # 4=512M; 5=640M; 6=768M
 
 # swapfile swappiness
 SWAPPINESS=20
+
 # file cache_pressure; file manager inode cache
 CACHE_PRESSURE=50
 
@@ -201,8 +206,10 @@ cat /proc/sys/vm/vfs_cache_pressure
 
 
 # --- Close ---
-echo -e "\n•\n\n🛠️  Config Complete: ufw, ssh, fail2ban, swap + cache_pressure."
-
+echo -e "\n•\n\n🛠️  Setup #2 Complete!"
+# echo -e "\n•\n\n🛠️  Config Complete: ufw, ssh, fail2ban, swap + cache_pressure."
+echo ""
+echo "Server setup & configuration complete. Now get to work!"
 
 
 
