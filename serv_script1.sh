@@ -119,36 +119,8 @@ fi
 
 # --- Locale Language ---
 sleep 1; echo "•"
-
-
-
 echo ">>> Setting locale to $LOCALE..."
-# localectl set-locale LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
-  # LC_ALL=en_US.UTF-8 --- will error;
-  # LC_ALL=en_US.UTF-8 not valid, refusing.
 localectl set-locale LANG=en_US.UTF-8 LANGUAGE=en_US:en
-# localectl set-locale LANG=en_AU.UTF-8 UTF-8 LANGUAGE=en_AU:en
-  # If ever get error here, they may need to manually uncomment relevant language in /etc/locale.gen; but so far, it's fine;
-
-# Noticing now that LANG and LANGUAGE aren't set in locale command until it's sourced like this:
-# . /etc/default/locale
-# Or rebooted;
-
-# Doing this below as I originally did doesn't seem to fix it:
-
-#echo ">>> Doing locale-gen $LOCALE..."
-# /usr/sbin/locale-gen
-#/usr/sbin/locale-gen en_US.UTF-8
-  # generate localisation files;
-  # Using full path because when relogin and then try
-   # running script again, then can't find locale-gen;
-   # but works okay if sudo it;
-
-#echo ">>> Doing update-locale $LOCALE..."
-#/usr/sbin/update-locale en_US.UTF-8 LANGUAGE=en_US:en
-  # Modify global default locale settings
-  # Writes to /etc/default/locale
-
 
 
 # --- Timezone ---
