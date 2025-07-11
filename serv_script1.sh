@@ -23,15 +23,15 @@ set -euo pipefail  # Exit on error, undefined variables, and pipeline failures
 
 # --- User Configuration ---
 
-NEW_USER=""
-HOSTNAME=""
+NEW_USER="h2"
+HOSTNAME="rail"
 
 ## Choose public ssh key to use:
 ## Linode
 #SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIND3WdyM/uNlOPA3hnGI1NojU0GAhnya5LmEIXsTpkSZ linode"
 
 ## Vultr
-#SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJvRchOMU0BxUkl3homRaW91rFbM6TAFryqCkqzOk1gD vultr"
+SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJvRchOMU0BxUkl3homRaW91rFbM6TAFryqCkqzOk1gD vultr"
 
 ## DigitalOcean
 #SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICCkSINhno1wkFfqjounBUilwg4rhDf2X8DKDix1IRAr digitalocean"
@@ -45,10 +45,10 @@ HOSTS=$(cat << EOF | sed 's/^[[:space:]]*//'
 
     127.0.0.1         localhost localhost.localdomain
     127.0.1.1         rail rail.paperdrift.com
-    172.236.252.18    rail rail.paperdrift.com
+    149.28.206.8      rail rail.paperdrift.com
 
     # For IPv6
-    2a01:7e03::2000:39ff:fece:cee2  rail rail.paperdrift.com
+    2001:19f0:ac00:4d1e:5400:04ff:fee2:4aba  rail rail.paperdrift.com
 
     # The following lines are desirable for IPv6 capable hosts
     ::1     localhost ip6-localhost ip6-loopback
@@ -64,7 +64,8 @@ EOF
 
 # These you shouldn't have to touch:
 TIMEZONE="UTC"
-LOCALE="en_US.UTF-8"
+LOCALE_LANG="en_US.UTF-8"
+LOCALE_LANGUAGE="en_US:en"
 SSH_DIR="/home/$NEW_USER/.ssh"
 
 
@@ -85,23 +86,26 @@ case "$CHOICE" in
       exit
       ;;
   y|Y|* )
-      echo "Alright... here we go!"
+      echo -e "Alright... here we go!\n\n"
       ;;
 esac
-
-# --- apt update & upgrade ---
-echo "•"
-echo ">>> apt update && update upgrade:"
-apt update -y && apt upgrade -y
 
 
 # --- Root Setup ---
 echo "•"
-echo ">>> Set root password:"
-passwd root
-echo ">>> Setting root shell to bash..."
-chsh -s /bin/bash root
-  # -s : name of shell
+read -rp "Set root PW? [y/N]: " CHOICE
+case "$CHOICE" in
+  y|Y )
+      echo ">>> Set root password:"
+      passwd root
+      echo ">>> Setting root shell to bash..."
+      chsh -s /bin/bash root
+        # -s : name of shell
+      ;;
+  n|N|* )
+      echo ">>> Skipping root password."
+      ;;
+esac
 
 
 # --- User Creation ---
@@ -117,10 +121,17 @@ else
 fi
 
 
+# --- apt update & upgrade ---
+echo "•"
+echo ">>> apt update && update upgrade:"
+apt update -y && apt upgrade -y
+
+
+
 # --- Locale Language ---
 sleep 1; echo "•"
-echo ">>> Setting locale to $LOCALE..."
-localectl set-locale LANG=en_US.UTF-8 LANGUAGE=en_US:en
+echo ">>> Setting locale to $LOCALE_LANG..."
+localectl set-locale LANG="$LOCALE_LANG" LANGUAGE="$LOCALE_LANGUAGE"
 
 
 # --- Timezone ---
@@ -135,27 +146,51 @@ ln -sf "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
 sleep 1; echo "•"
 echo ">>> Set NTP Service..."
 
-# Check that systemd-timesynd is installed
+declare NTP_ENABLED=true
+# Check that systemd-timesynd is installed; only vultr has this problem;
 # if systemctl status systemd-timesyncd 2>&1 | grep "could not be found" &>/dev/null; then
+echo ">>> Synchronize System Clock..."
 if ! systemctl status systemd-timesyncd &>/dev/null; then
     # systemctl status systemd-timesyncd
     # dpkg -l | grep systemd-timesyncd
     # timedatectl timesync-status
+
     echo ">>> Installing systemd-timesyncd"
     apt install -y systemd-timesyncd
-    echo ">>> enabling systemd-timesync"
+    echo ">>> Enabling systemd-timesync"
+
+    echo "[Time]
+    NTP=pool.ntp.org
+    FallbackNTP=ntp.ubuntu.com" > /etc/systemd/timesyncd.conf
+
     systemctl enable --now systemd-timesyncd # enable + start
-    # systemctl restart systemd-timesyncd  # Forces D-Bus refresh
+    systemctl restart systemd-timesyncd
 
+    if [[ $(timedatectl show | grep 'NTPSynchronized=yes') ]]; then
+        echo ">>> NTP enabled"
+        NTP_ENABLED=true
+    else
+        echo ">>> NTP failed"
+        NTP_ENABLED=false
+    fi
     # systemctl status systemd-timesyncd
-    # echo ">>> Sleep 4"
-    # sleep 4
+    # echo ">>> Sleep 5"
+    # sleep 5
     # systemctl is-enabled systemd-timesyncd
+else
+  timedatectl set-ntp true &>/dev/null && echo ">>> NTP enabled" && break
+  # echo ">>> Synchronize System Clock..."
+  # timedatectl set-ntp true &>/dev/null
+  # for i in {1..5}; do
+  #     sleep 5
+  #     if systemctl is-active --quiet systemd-timesyncd; then
+  #         timedatectl set-ntp true &>/dev/null && echo ">>> NTP enabled" && break
+  #     fi
+  #     # timedatectl status  # Try running some command to 'jerk' it alive;
+  #     echo "Waiting for systemd-timesyncd to be ready... ($i of 5)"
+  #     i=6  # if here, then failed; set to 6 and check later;
+  # done
 fi
-
-echo ">>> Synchronize System Clock..."
-timedatectl set-ntp true
-
 
 
 # --- kb layout ---
@@ -163,6 +198,10 @@ sleep 1; echo "•"
 echo ">>> Setting kb layout..."
 localectl set-x11-keymap us pc105
 
+echo ">>> Setting vconsole.conf..."
+echo 'KEYMAP=us' | tee /etc/vconsole.conf
+  # setting this because vultr doesn't have vconsole.conf
+   # And when I try to cat it, it errors and breaks the script;
 
 # --- Setup hostname and hosts file ---
 # /etc/hostname
@@ -170,7 +209,8 @@ sleep 1; echo "•"
 echo ">>> Setting /etc/hostname file to $HOSTNAME..."
 hostnamectl set-hostname "$HOSTNAME"
 echo ">>> Setting /etc/hosts file..."
-echo "$HOSTS" | sudo tee /etc/hosts >/dev/null
+# echo "$HOSTS" | sudo tee /etc/hosts >/dev/null
+echo "$HOSTS" | tee /etc/hosts >/dev/null
   # tee outputs to stout; suppress that;
 
 
@@ -222,7 +262,6 @@ else
 fi
 
 
-
 # --- Validation ---
 sleep 1; echo "•"
 echo ">>>"
@@ -249,8 +288,18 @@ locale
 echo -e "\n•\n\n▪ localectl status"
 localectl status
 
+echo -e "\n•\n\n▪ cat /etc/vconsole.conf"
+[[ -f /etc/vconsole.conf ]] && cat /etc/vconsole.conf
+# cat /etc/vconsole.conf &>/dev/null
+  # Not sure why when vconsole.conf doesn't exist, it breaks the damn script!
+
 echo -e "\n•\n\n▪ timedatectl status"
 timedatectl status
+  # More human readable; more laggy?
+
+echo -e "\n•\n\n▪ timedatectl show"
+timedatectl show
+  # more machine readable friendly; May be less laggy?
 
 echo -e "\n•\n\n▪ cat /etc/timezone"
 cat /etc/timezone
@@ -278,8 +327,21 @@ ls -al /home/$NEW_USER/tmp/serv_dot
 # --- Close ---
 echo -e "\n•\n\n🛠️  Setup #1 Complete!"
 echo ""
+
+# NTP enable failed; Vultr always fails!
+# if [[ $i -eq 6 ]]; then
+if [[ ! "$NTP_ENABLED" ]]; then
+    echo "Looks like NTP enable failed."
+    echo "Try again manually:"
+    echo "$ timedatectl set-ntp true"
+    echo "And check status:"
+    echo "$ timedatectl status"
+    echo "$ timedatectl show"
+    echo -e "\n- - - - - - - - - - - - - -\n"
+fi
+
 echo "What to do next:"
-echo "$ su $NEW_USER"
+echo -e "\n$ su $NEW_USER"
 echo
 echo "Install dot files and applications:"
 echo "$ cd ~/tmp/serv_dot"
