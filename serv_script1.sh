@@ -31,7 +31,7 @@ HOSTNAME="rail"
 #SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIND3WdyM/uNlOPA3hnGI1NojU0GAhnya5LmEIXsTpkSZ linode"
 
 ## Vultr
-SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJvRchOMU0BxUkl3homRaW91rFbM6TAFryqCkqzOk1gD vultr"
+#SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJvRchOMU0BxUkl3homRaW91rFbM6TAFryqCkqzOk1gD vultr"
 
 ## DigitalOcean
 #SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICCkSINhno1wkFfqjounBUilwg4rhDf2X8DKDix1IRAr digitalocean"
@@ -146,19 +146,17 @@ ln -sf "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
 sleep 1; echo "•"
 echo ">>> Set NTP Service..."
 
-declare NTP_ENABLED=true
-# Check that systemd-timesynd is installed; only vultr has this problem;
-# if systemctl status systemd-timesyncd 2>&1 | grep "could not be found" &>/dev/null; then
 echo ">>> Synchronize System Clock..."
+declare NTP_ENABLED=false
+# Check that systemd-timesynd is installed; only vultr has this problem;
 if ! systemctl status systemd-timesyncd &>/dev/null; then
-    # systemctl status systemd-timesyncd
-    # dpkg -l | grep systemd-timesyncd
-    # timedatectl timesync-status
 
     echo ">>> Installing systemd-timesyncd"
     apt install -y systemd-timesyncd
     echo ">>> Enabling systemd-timesync"
 
+    # vultr has trouble enabling ntp the normal way; tried many different ways;
+    # So just write to the timesyncd.conf; this seems to solve the problem;
     echo "[Time]
     NTP=pool.ntp.org
     FallbackNTP=ntp.ubuntu.com" > /etc/systemd/timesyncd.conf
@@ -166,30 +164,18 @@ if ! systemctl status systemd-timesyncd &>/dev/null; then
     systemctl enable --now systemd-timesyncd # enable + start
     systemctl restart systemd-timesyncd
 
-    if [[ $(timedatectl show | grep 'NTPSynchronized=yes') ]]; then
-        echo ">>> NTP enabled"
-        NTP_ENABLED=true
-    else
-        echo ">>> NTP failed"
-        NTP_ENABLED=false
-    fi
-    # systemctl status systemd-timesyncd
-    # echo ">>> Sleep 5"
-    # sleep 5
-    # systemctl is-enabled systemd-timesyncd
 else
-  timedatectl set-ntp true &>/dev/null && echo ">>> NTP enabled" && break
-  # echo ">>> Synchronize System Clock..."
-  # timedatectl set-ntp true &>/dev/null
-  # for i in {1..5}; do
-  #     sleep 5
-  #     if systemctl is-active --quiet systemd-timesyncd; then
-  #         timedatectl set-ntp true &>/dev/null && echo ">>> NTP enabled" && break
-  #     fi
-  #     # timedatectl status  # Try running some command to 'jerk' it alive;
-  #     echo "Waiting for systemd-timesyncd to be ready... ($i of 5)"
-  #     i=6  # if here, then failed; set to 6 and check later;
-  # done
+  # This is normal way used by other VPSs;
+  timedatectl set-ntp true &>/dev/null
+fi
+
+# We'll do one combined check for ntp enabled/disabled;
+if [[ $(timedatectl show | grep 'NTPSynchronized=yes') ]]; then
+    echo ">>> NTP enabled"
+    NTP_ENABLED=true
+else
+    echo ">>> NTP failed"
+    NTP_ENABLED=false
 fi
 
 

@@ -192,6 +192,13 @@ sudo fail2ban-client status recidive
 echo -e "\n•\n\n▪ systemctl status ssh"
 sudo systemctl status ssh
 
+echo -e "\n•\n\n▪ cat /etc/ssh/sshd_config"
+# Print relevant lines:
+grep -E "Port 5522|PasswordAuthentication no|PermitRootLogin no" /etc/ssh/sshd_config
+  # -E : extended regex
+  # -e : basic regex;
+  # -i : case insensitive
+
 echo -e "\n•\n\n▪ free -h"
 free -h
 
