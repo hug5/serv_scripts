@@ -181,11 +181,12 @@ fi
 
 # --- kb layout ---
 sleep 1; echo "•"
-echo ">>> Setting kb layout..."
-localectl set-x11-keymap us pc105
+# echo ">>> Setting kb layout..."
+# localectl set-x11-keymap us pc105
 
-echo ">>> Setting vconsole.conf..."
-echo 'KEYMAP=us' | tee /etc/vconsole.conf
+echo ">>> Setting kb via vconsole.conf..."
+#echo 'KEYMAP=us' | tee /etc/vconsole.conf
+echo -e 'XKBLAYOUT=us\nXKBMODEL=pc105\nKEYMAP=us' | sudo tee /etc/vconsole.conf
   # setting this because vultr doesn't have vconsole.conf
    # And when I try to cat it, it errors and breaks the script;
 
