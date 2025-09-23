@@ -65,7 +65,8 @@ EOF
 # These you shouldn't have to touch:
 TIMEZONE="UTC"
 LOCALE_LANG="en_US.UTF-8"
-LOCALE_LANGUAGE="en_US:en"
+# LOCALE_LANGUAGE="en_US:en"
+LOCALE_LANGUAGE="en_US"
 SSH_DIR="/home/$NEW_USER/.ssh"
 
 
