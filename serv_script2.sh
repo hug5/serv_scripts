@@ -28,7 +28,7 @@ CREATE_SWAP=true
 # Swap size
 SWAPCOUNT=6
   # 128M * N
-  # 4=512M; 5=640M; 6=768M; 7=896; 8=1024
+  # 4=512M; 5=640M; 6=768M; 7=896M; 8=1024M; 12=1536M; 16=2048M
 
 # swapfile swappiness: 0-100; default=60; lower=more aggressive ram
 SWAPPINESS=40

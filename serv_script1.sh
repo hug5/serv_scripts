@@ -3,6 +3,21 @@
 # // 2025-07-01 Tue 23:33
 # Run script as root or sudo:
 
+#------------------------------------------------
+
+
+# If server has been pre-setup with ssh for root
+# $ ssh -p22 root@45.32.66.149 -i ~/.ssh/id_vultr
+  # log in as root using current user's ssh conf;
+
+# Change into serv_scripts directory
+# $ z serv_scripts
+# $ scp -P22 serv_script1.sh root@45.32.66.149:/tmp
+# Then run the script from /tmp folder;
+
+#------------------------------------------------
+
+
 # --- Security Hardening ---
 set -euo pipefail  # Exit on error, undefined variables, and pipeline failures
   # -e :
