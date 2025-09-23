@@ -34,7 +34,7 @@ HOSTNAME="rail"
 #SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJvRchOMU0BxUkl3homRaW91rFbM6TAFryqCkqzOk1gD vultr"
 
 ## DigitalOcean
-#SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICCkSINhno1wkFfqjounBUilwg4rhDf2X8DKDix1IRAr digitalocean"
+SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICCkSINhno1wkFfqjounBUilwg4rhDf2X8DKDix1IRAr do"
 
 
 # Heredoc

@@ -26,14 +26,14 @@ set -euo pipefail  # Exit on error, undefined variables, and pipeline failures
 CREATE_SWAP=true
 
 # Swap size
-SWAPCOUNT=5
+SWAPCOUNT=6
   # 128M * N
-  # 4=512M; 5=640M; 6=768M
+  # 4=512M; 5=640M; 6=768M; 7=896; 8=1024
 
-# swapfile swappiness
-SWAPPINESS=20
+# swapfile swappiness: 0-100; default=60; lower=more aggressive ram
+SWAPPINESS=40
 
-# file cache_pressure; file manager inode cache
+# file cache_pressure; file manager inode cache; default=100; lower=more aggressive inode retention
 CACHE_PRESSURE=50
 
 
