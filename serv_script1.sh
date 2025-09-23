@@ -13,7 +13,10 @@
 # Change into serv_scripts directory
 # $ z serv_scripts
 # $ scp -P22 serv_script1.sh root@45.32.66.149:/tmp
-# Then run the script from /tmp folder;
+
+# 1. Select SSH_PUB
+# 2. Set hostname/hosts settings
+# 3. Then run the script from /tmp folder;
 
 #------------------------------------------------
 
@@ -39,9 +42,9 @@ set -euo pipefail  # Exit on error, undefined variables, and pipeline failures
 # --- User Configuration ---
 
 NEW_USER="h2"
-HOSTNAME="rail"
+HOSTNAME="rail"      # <---------- **Set
 
-## Choose public ssh key to use:
+## Select public ssh key to use:  # <---------- **Set
 ## Linode
 #SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIND3WdyM/uNlOPA3hnGI1NojU0GAhnya5LmEIXsTpkSZ linode"
 
@@ -52,6 +55,7 @@ HOSTNAME="rail"
 SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICCkSINhno1wkFfqjounBUilwg4rhDf2X8DKDix1IRAr do"
 
 
+## Set hosts         # <---------- **Set
 # Heredoc
 # /etc/hosts setting:
 # EOF without quotes you can use variables, etc;
