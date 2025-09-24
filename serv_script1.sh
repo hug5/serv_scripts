@@ -5,14 +5,17 @@
 
 #------------------------------------------------
 
+# Clone serv_scripts:
+# $ git clone https://github.com/hug5/serv_scripts.git --depth 1 && cd serv_scripts
+
+# Use scp to upload:
+# Change into serv_scripts directory; then upload script
+# $ z serv_scripts
+# $ scp -P22 serv_script1.sh root@45.32.66.149:/tmp
 
 # If server has been pre-setup with ssh for root
 # $ ssh -p22 root@45.32.66.149 -i ~/.ssh/id_vultr
   # log in as root using current user's ssh conf;
-
-# Change into serv_scripts directory
-# $ z serv_scripts
-# $ scp -P22 serv_script1.sh root@45.32.66.149:/tmp
 
 # 1. Select SSH_PUB
 # 2. Set hostname/hosts settings
@@ -49,10 +52,10 @@ HOSTNAME="rail"      # <---------- **Set
 #SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIND3WdyM/uNlOPA3hnGI1NojU0GAhnya5LmEIXsTpkSZ linode"
 
 ## Vultr
-#SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJvRchOMU0BxUkl3homRaW91rFbM6TAFryqCkqzOk1gD vultr"
+SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJvRchOMU0BxUkl3homRaW91rFbM6TAFryqCkqzOk1gD vultr"
 
 ## DigitalOcean
-SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICCkSINhno1wkFfqjounBUilwg4rhDf2X8DKDix1IRAr do"
+#SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICCkSINhno1wkFfqjounBUilwg4rhDf2X8DKDix1IRAr do"
 
 
 ## Set hosts         # <---------- **Set
@@ -64,10 +67,10 @@ HOSTS=$(cat << EOF | sed 's/^[[:space:]]*//'
 
     127.0.0.1         localhost localhost.localdomain
     127.0.1.1         rail rail.paperdrift.com
-    149.28.206.8      rail rail.paperdrift.com
+    149.28.87.212     rail rail.paperdrift.com
 
     # For IPv6
-    2001:19f0:ac00:4d1e:5400:04ff:fee2:4aba  rail rail.paperdrift.com
+    #2001:19f0:ac00:4d1e:5400:04ff:fee2:4aba  rail rail.paperdrift.com
 
     # The following lines are desirable for IPv6 capable hosts
     ::1     localhost ip6-localhost ip6-loopback
@@ -147,11 +150,51 @@ echo ">>> apt update && update upgrade:"
 apt update -y && apt upgrade -y
 
 
+echo ""
+echo ""
+echo "••••••••••••••••••••••••••••••••••••••••"
+echo "•    FINISHED APT UPDATE & UPGRADE     •"
+echo "••••••••••••••••••••••••••••••••••••••••"
+echo ""
+echo ""
+
 
 # --- Locale Language ---
 sleep 1; echo "•"
 echo ">>> Setting locale to $LOCALE_LANG..."
-localectl set-locale LANG="$LOCALE_LANG" LANGUAGE="$LOCALE_LANGUAGE"
+#localectl set-locale LANG=en_US.UTF-8 LANGUAGE=en_US
+#localectl set-locale LANG="$LOCALE_LANG" LANGUAGE="$LOCALE_LANGUAGE"
+  # // 2025-09-24 Wed 03:42
+  # Suddenly getting "Failed to issue method call: Access denied"!
+
+# If you manually edit the file (rather than being able to just call
+ # set-locale per above), then will need to edit /etc/locale.gen
+ # file and call /usr/sbin/locale-gen
+echo 'LANG=en_US.UTF-8' > /etc/locale.conf
+echo 'LANGUAGE=en_US' >> /etc/locale.conf
+
+sed -i 's/^# *\(en_US.UTF-8 UTF-8\)/\1/' /etc/locale.gen
+  # Uncomment 'en_US.UTF-8':
+
+sudo /usr/sbin/locale-gen
+  # Generate language data files; locales for all uncommented locales
+
+
+
+# --- kb layout ---
+sleep 1; echo "•"
+# echo ">>> Setting kb layout..."
+# localectl set-x11-keymap us pc105
+# localectl --no-convert set-x11-keymap us pc105
+# localectl --no-convert set-keymap us
+
+echo ">>> Setting kb via vconsole.conf..."
+#echo 'KEYMAP=us' | tee /etc/vconsole.conf
+echo -e 'XKBLAYOUT=us\nXKBMODEL=pc105\nKEYMAP=us' | sudo tee /etc/vconsole.conf
+  # setting this because vultr doesn't have vconsole.conf
+   # And when I try to cat it, it errors and breaks the script;
+
+
 
 
 # --- Timezone ---
@@ -199,17 +242,6 @@ else
 fi
 
 
-# --- kb layout ---
-sleep 1; echo "•"
-# echo ">>> Setting kb layout..."
-# localectl set-x11-keymap us pc105
-
-echo ">>> Setting kb via vconsole.conf..."
-#echo 'KEYMAP=us' | tee /etc/vconsole.conf
-echo -e 'XKBLAYOUT=us\nXKBMODEL=pc105\nKEYMAP=us' | sudo tee /etc/vconsole.conf
-  # setting this because vultr doesn't have vconsole.conf
-   # And when I try to cat it, it errors and breaks the script;
-
 # --- Setup hostname and hosts file ---
 # /etc/hostname
 sleep 1; echo "•"
@@ -252,7 +284,7 @@ chmod 600 "$SSH_DIR/authorized_keys"
 # --- install git + clone serv_dot ---
 sleep 1; echo "•"
 echo ">>> Installing git..."
-sudo apt install git
+sudo apt install git -y
 
 if [[ ! -d /home/$NEW_USER/tmp ]]; then
     sudo -u $NEW_USER mkdir /home/$NEW_USER/tmp
