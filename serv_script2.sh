@@ -16,11 +16,15 @@ set -euo pipefail  # Exit on error, undefined variables, and pipeline failures
 #------------------------------------------------
 ### Initial Server Setup #2
 #------------------------------------------------
-# Configure ufw, sshd_config, fail2ban,
-# swap, swappiness, cache_pressure
+# What does this do?
+  # Configure ufw, fail2ban, sshd_config, fail2ban,
+  # create swap, swappiness, cache_pressure
 
 
-# --- User Configuration ---
+
+#------------------------------------------------
+### User Configuration
+#------------------------------------------------
 
 # Create /swapfile?
 CREATE_SWAP=true
@@ -38,6 +42,8 @@ CACHE_PRESSURE=50
 
 
 
+#------------------------------------------------
+### Begin Run Script
 #------------------------------------------------
 
 # --- Begin Script ---

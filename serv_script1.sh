@@ -34,15 +34,22 @@ set -euo pipefail  # Exit on error, undefined variables, and pipeline failures
     # This setting prevents errors in a pipeline from being masked. If any command in a pipeline fails, that return code will be used as the return code of the whole pipeline.
   # https://gist.github.com/mohanpedala/1e2ff5661761d3abd0385e8223e16425?permalink_comment_id=3935570
 
+
 #------------------------------------------------
 ### Initial Server Setup #1
 #------------------------------------------------
-# Create users, passwords, locale, timezone,
-# hostname, hosts, ssh key, install programs,
-# clone serv_dot
+# What does this script do?
+  # Update and upgrade new system;
+  # Create users, passwords, locale language + kb, timezone;
+  # Syncrhonize clock, NTP service;
+  # hostname, hosts, ssh authorized keys, install git;
+  # git clone serv_dot
 
 
-# --- User Configuration ---
+#------------------------------------------------
+### User Configuration
+#------------------------------------------------
+
 
 NEW_USER="h2"
 HOSTNAME="rail"      # <---------- **Set
@@ -52,7 +59,7 @@ HOSTNAME="rail"      # <---------- **Set
 #SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIND3WdyM/uNlOPA3hnGI1NojU0GAhnya5LmEIXsTpkSZ linode"
 
 ## Vultr
-SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJvRchOMU0BxUkl3homRaW91rFbM6TAFryqCkqzOk1gD vultr"
+#SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJvRchOMU0BxUkl3homRaW91rFbM6TAFryqCkqzOk1gD vultr"
 
 ## DigitalOcean
 #SSH_PUB="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICCkSINhno1wkFfqjounBUilwg4rhDf2X8DKDix1IRAr do"
@@ -91,8 +98,17 @@ LOCALE_LANG="en_US.UTF-8"
 LOCALE_LANGUAGE="en_US"
 SSH_DIR="/home/$NEW_USER/.ssh"
 
+KB_XKBLAYOUT="us"
+KB_KEYMAP="us"
+KB_XKBMODEL="pc105"
+
+
+
 
 #------------------------------------------------
+### Begin Run Script
+#------------------------------------------------
+
 
 if [[ -z "$NEW_USER" ]] || [[ -z "$HOSTNAME" ]] || [[ -z "$SSH_PUB" ]]; then
     echo "Please provide a new user, hostname and SSH public key."
@@ -170,15 +186,14 @@ echo ">>> Setting locale to $LOCALE_LANG..."
 # If you manually edit the file (rather than being able to just call
  # set-locale per above), then will need to edit /etc/locale.gen
  # file and call /usr/sbin/locale-gen
-echo 'LANG=en_US.UTF-8' > /etc/locale.conf
-echo 'LANGUAGE=en_US' >> /etc/locale.conf
+echo "LANG=$LOCALE_LANG" > /etc/locale.conf
+echo "LANGUAGE=$LOCALE_LANGUAGE" >> /etc/locale.conf
 
-sed -i 's/^# *\(en_US.UTF-8 UTF-8\)/\1/' /etc/locale.gen
+sed -i "s/^# *\($LOCALE_LANG\)/\1/" /etc/locale.gen
   # Uncomment 'en_US.UTF-8':
 
 sudo /usr/sbin/locale-gen
   # Generate language data files; locales for all uncommented locales
-
 
 
 # --- kb layout ---
@@ -190,10 +205,10 @@ sleep 1; echo "•"
 
 echo ">>> Setting kb via vconsole.conf..."
 #echo 'KEYMAP=us' | tee /etc/vconsole.conf
-echo -e 'XKBLAYOUT=us\nXKBMODEL=pc105\nKEYMAP=us' | sudo tee /etc/vconsole.conf
+# echo -e "XKBLAYOUT=us\nXKBMODEL=pc105\nKEYMAP=us" | sudo tee /etc/vconsole.conf
+echo -e "XKBLAYOUT=$KB_XKBLAYOUT\nXKBMODEL=$KB_XKBMODEL\nKEYMAP=$KB_KEYMAP" | sudo tee /etc/vconsole.conf
   # setting this because vultr doesn't have vconsole.conf
    # And when I try to cat it, it errors and breaks the script;
-
 
 
 
@@ -387,7 +402,12 @@ echo "$ cd ~/tmp/serv_dot"
 echo "$ . serv_dot.sh"
 
 
+
+
+
+
 ###############################################
+### Old Notes
 
   # --- User Creation ---
 
